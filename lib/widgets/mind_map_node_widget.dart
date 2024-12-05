@@ -3,17 +3,19 @@ import '../models/mind_map_node.dart';
 
 class MindMapNodeWidget extends StatelessWidget {
   final MindMapNode node;
-  final VoidCallback? onTap;
-  final Function(Offset)? onDragEnd;
   final bool isSelected;
+  final bool isConnectionStart;
+  final VoidCallback onTap;
+  final Function(Offset)? onDragEnd;
 
   const MindMapNodeWidget({
-    Key? key,
+    super.key,
     required this.node,
-    this.onTap,
+    required this.isSelected,
+    this.isConnectionStart = false,
+    required this.onTap,
     this.onDragEnd,
-    this.isSelected = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -41,8 +43,12 @@ class MindMapNodeWidget extends StatelessWidget {
             color: Colors.white,
             borderRadius: BorderRadius.circular(8.0),
             border: Border.all(
-              color: isSelected ? Colors.blue : Colors.grey,
-              width: isSelected ? 2.0 : 1.0,
+              color: isConnectionStart 
+                ? Colors.green 
+                : isSelected 
+                  ? Colors.blue 
+                  : Colors.grey,
+              width: (isSelected || isConnectionStart) ? 2.0 : 1.0,
             ),
             boxShadow: [
               BoxShadow(
