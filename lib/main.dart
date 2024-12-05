@@ -79,6 +79,9 @@ class MindMapScreen extends StatelessWidget {
                   onDragEnd: (offset) {
                     provider.updateNodePosition(node.id, offset.dx, offset.dy);
                   },
+                  onTextChanged: (text) {
+                    provider.updateNodeText(node.id, text);
+                  },
                 ),
             ],
           );
