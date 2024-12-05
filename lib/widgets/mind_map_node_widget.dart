@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import '../models/mind_map_node.dart';
+import '../providers/mind_map_provider.dart';
 import 'dart:math';
 
 class MindMapNodeWidget extends StatefulWidget {
@@ -75,6 +77,61 @@ class _MindMapNodeWidgetState extends State<MindMapNodeWidget> {
     });
   }
 
+  void _showContextMenu(BuildContext context, TapDownDetails details) {
+    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final RelativeRect position = RelativeRect.fromRect(
+      Rect.fromPoints(
+        details.globalPosition,
+        details.globalPosition,
+      ),
+      Offset.zero & overlay.size,
+    );
+
+    showMenu(
+      context: context,
+      position: position,
+      items: [
+        PopupMenuItem(
+          child: Row(
+            children: const [
+              Icon(Icons.edit, size: 20),
+              SizedBox(width: 8),
+              Text('Edit'),
+            ],
+          ),
+          onTap: _startEditing,
+        ),
+        PopupMenuItem(
+          child: Row(
+            children: const [
+              Icon(Icons.link, size: 20),
+              SizedBox(width: 8),
+              Text('Start Connection'),
+            ],
+          ),
+          onTap: () {
+            if (widget.onTap != null) {
+              widget.onTap();
+            }
+          },
+        ),
+        PopupMenuItem(
+          child: Row(
+            children: const [
+              Icon(Icons.delete, color: Colors.red, size: 20),
+              SizedBox(width: 8),
+              Text('Delete', style: TextStyle(color: Colors.red)),
+            ],
+          ),
+          onTap: () {
+            final provider = context.read<MindMapProvider>();
+            provider.deleteNode(widget.node.id);
+          },
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Positioned(
@@ -83,6 +140,7 @@ class _MindMapNodeWidgetState extends State<MindMapNodeWidget> {
       child: GestureDetector(
         onTap: widget.onTap,
         onDoubleTap: _startEditing,
+        onSecondaryTapDown: (details) => _showContextMenu(context, details),
         onPanEnd: (details) {
           if (widget.onDragEnd != null) {
             widget.onDragEnd!(Offset(widget.node.x, widget.node.y));
@@ -124,9 +182,9 @@ class _MindMapNodeWidgetState extends State<MindMapNodeWidget> {
           child: _isEditing
               ? SizedBox(
                   width: max(100, _textController.text.length * 8.0), 
-                  child: RawKeyboardListener(
+                  child: KeyboardListener(
                     focusNode: FocusNode(),
-                    onKey: (event) {
+                    onKeyEvent: (event) {
                       if (event.logicalKey == LogicalKeyboardKey.escape) {
                         // Cancel editing on Escape
                         setState(() {

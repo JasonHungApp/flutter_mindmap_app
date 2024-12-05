@@ -47,10 +47,30 @@ class MindMapProvider extends ChangeNotifier {
   }
 
   void deleteNode(String id) {
+    // First remove all connections to this node
+    for (var node in _nodes) {
+      if (node.childrenIds.contains(id)) {
+        final updatedNode = node.copyWith(
+          childrenIds: List<String>.from(node.childrenIds)..remove(id),
+        );
+        final index = _nodes.indexOf(node);
+        _nodes[index] = updatedNode;
+      }
+    }
+
+    // Then remove the node itself
     _nodes.removeWhere((node) => node.id == id);
+
+    // If this was the selected node, clear selection
     if (_selectedNode?.id == id) {
       _selectedNode = null;
     }
+
+    // If this was the connection start node, cancel connection
+    if (_connectionStartNodeId == id) {
+      _connectionStartNodeId = null;
+    }
+
     notifyListeners();
   }
 

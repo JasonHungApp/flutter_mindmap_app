@@ -56,6 +56,15 @@ class MindMapScreen extends StatelessWidget {
               }
             },
           ),
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: () {
+              final provider = context.read<MindMapProvider>();
+              if (provider.selectedNode != null) {
+                provider.deleteNode(provider.selectedNode!.id);
+              }
+            },
+          ),
         ],
       ),
       body: Consumer<MindMapProvider>(
