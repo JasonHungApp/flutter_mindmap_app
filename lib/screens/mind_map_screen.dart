@@ -4,6 +4,7 @@ import '../providers/mind_map_provider.dart';
 import '../widgets/mind_map_node_widget.dart';
 import '../widgets/mind_map_connections.dart';
 import '../widgets/saved_mind_maps_dialog.dart';
+import 'file_manager_screen.dart';
 
 class MindMapScreen extends StatelessWidget {
   const MindMapScreen({super.key});
@@ -12,6 +13,12 @@ class MindMapScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.home),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
         title: const Text('Mind Map'),
         actions: [
           PopupMenuButton<String>(

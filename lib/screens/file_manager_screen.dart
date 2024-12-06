@@ -21,7 +21,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {
-              Navigator.of(context).pushReplacement(
+              Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) => const MindMapScreen(),
                 ),
@@ -58,7 +58,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
                     onPressed: () {
-                      Navigator.of(context).pushReplacement(
+                      Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => const MindMapScreen(),
                         ),
@@ -127,7 +127,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
                       final content = await file.readAsString();
                       if (mounted) {
                         await context.read<MindMapProvider>().loadFromJson(content);
-                        Navigator.of(context).pushReplacement(
+                        Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (context) => const MindMapScreen(),
                           ),
