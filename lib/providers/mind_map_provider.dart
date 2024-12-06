@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
 import '../models/mind_map_node.dart';
 
@@ -204,6 +205,40 @@ class MindMapProvider with ChangeNotifier {
       }
     } catch (e) {
       debugPrint('Error deleting mind map: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> shareMindMap() async {
+    try {
+      // Prepare the data
+      final data = {
+        'nodes': _nodes.map((node) => node.toJson()).toList(),
+      };
+
+      // Convert to JSON string
+      final jsonString = jsonEncode(data);
+
+      // Get temporary directory
+      final directory = await getTemporaryDirectory();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final filePath = '${directory.path}/mindmap_$timestamp.json';
+      
+      // Write to temporary file
+      final file = File(filePath);
+      await file.writeAsString(jsonString);
+
+      // Share the file
+      await Share.shareXFiles(
+        [XFile(filePath)],
+        subject: '分享心智圖',
+        text: '請使用心智圖 App 開啟此檔案',
+      );
+
+      // Clean up temporary file after sharing
+      await file.delete();
+    } catch (e) {
+      debugPrint('Error sharing mind map: $e');
       rethrow;
     }
   }

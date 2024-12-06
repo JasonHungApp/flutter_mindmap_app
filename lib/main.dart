@@ -51,13 +51,13 @@ class MindMapScreen extends StatelessWidget {
                     await provider.saveMindMap();
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Mind map saved successfully')),
+                        const SnackBar(content: Text('心智圖儲存成功')),
                       );
                     }
                   } catch (e) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error saving mind map: $e')),
+                        SnackBar(content: Text('儲存心智圖時發生錯誤: $e')),
                       );
                     }
                   }
@@ -67,13 +67,24 @@ class MindMapScreen extends StatelessWidget {
                     await provider.loadMindMap();
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Mind map loaded successfully')),
+                        const SnackBar(content: Text('心智圖載入成功')),
                       );
                     }
                   } catch (e) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error loading mind map: $e')),
+                        SnackBar(content: Text('載入心智圖時發生錯誤: $e')),
+                      );
+                    }
+                  }
+                  break;
+                case 'share':
+                  try {
+                    await provider.shareMindMap();
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('分享心智圖時發生錯誤: $e')),
                       );
                     }
                   }
@@ -91,43 +102,23 @@ class MindMapScreen extends StatelessWidget {
             itemBuilder: (context) => [
               const PopupMenuItem(
                 value: 'new',
-                child: Row(
-                  children: [
-                    Icon(Icons.file_open),
-                    SizedBox(width: 8),
-                    Text('New Mind Map'),
-                  ],
-                ),
+                child: Text('新建心智圖'),
               ),
               const PopupMenuItem(
                 value: 'save',
-                child: Row(
-                  children: [
-                    Icon(Icons.save),
-                    SizedBox(width: 8),
-                    Text('Save Mind Map'),
-                  ],
-                ),
+                child: Text('儲存心智圖'),
               ),
               const PopupMenuItem(
                 value: 'load',
-                child: Row(
-                  children: [
-                    Icon(Icons.folder_open),
-                    SizedBox(width: 8),
-                    Text('Load Mind Map'),
-                  ],
-                ),
+                child: Text('載入心智圖'),
+              ),
+              const PopupMenuItem(
+                value: 'share',
+                child: Text('分享心智圖'),
               ),
               const PopupMenuItem(
                 value: 'files',
-                child: Row(
-                  children: [
-                    Icon(Icons.list),
-                    SizedBox(width: 8),
-                    Text('Saved Mind Maps'),
-                  ],
-                ),
+                child: Text('管理檔案'),
               ),
             ],
           ),

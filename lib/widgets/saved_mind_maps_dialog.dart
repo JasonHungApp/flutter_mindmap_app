@@ -102,6 +102,23 @@ class SavedMindMapsDialog extends StatelessWidget {
                               }
                             },
                           ),
+                          IconButton(
+                            icon: const Icon(Icons.share),
+                            onPressed: () async {
+                              try {
+                                final file = File(filePath);
+                                final content = await file.readAsString();
+                                await context.read<MindMapProvider>().loadFromJson(content);
+                                await context.read<MindMapProvider>().shareMindMap();
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('分享心智圖時發生錯誤: $e')),
+                                  );
+                                }
+                              }
+                            },
+                          ),
                           const SizedBox(width: 8), // Add some padding on the right
                         ],
                       );
