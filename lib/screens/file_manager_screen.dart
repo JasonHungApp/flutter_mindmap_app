@@ -34,6 +34,8 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {
+              final provider = context.read<MindMapProvider>();
+              provider.clearMindMap();  // 清空當前心智圖
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) => const MindMapScreen(),
@@ -75,6 +77,8 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
                     onPressed: () {
+                      final provider = context.read<MindMapProvider>();
+                      provider.clearMindMap();  // 清空當前心智圖
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => const MindMapScreen(),
