@@ -195,6 +195,19 @@ class MindMapProvider with ChangeNotifier {
     }
   }
 
+  Future<void> deleteSavedMindMap(String filePath) async {
+    try {
+      final file = File(filePath);
+      if (await file.exists()) {
+        await file.delete();
+        debugPrint('Mind map deleted: $filePath');
+      }
+    } catch (e) {
+      debugPrint('Error deleting mind map: $e');
+      rethrow;
+    }
+  }
+
   void clearMindMap() {
     _nodes.clear();
     _selectedNode = null;

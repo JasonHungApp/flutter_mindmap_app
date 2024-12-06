@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'providers/mind_map_provider.dart';
 import 'widgets/mind_map_node_widget.dart';
 import 'widgets/mind_map_connections.dart';
+import 'widgets/saved_mind_maps_dialog.dart';
 import 'dart:io';
 
 void main() {
@@ -79,53 +80,10 @@ class MindMapScreen extends StatelessWidget {
                   break;
                 case 'files':
                   if (context.mounted) {
-                    final files = await provider.getSavedMindMaps();
-                    if (context.mounted) {
-                      showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Saved Mind Maps'),
-                          content: SizedBox(
-                            width: double.maxFinite,
-                            child: ListView.builder(
-                              shrinkWrap: true,
-                              itemCount: files.length,
-                              itemBuilder: (context, index) {
-                                final file = File(files[index]);
-                                final fileName = file.path.split('/').last;
-                                return ListTile(
-                                  title: Text(fileName),
-                                  onTap: () async {
-                                    Navigator.of(context).pop();
-                                    try {
-                                      final content = await file.readAsString();
-                                      await provider.loadFromJson(content);
-                                      if (context.mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text('Mind map loaded successfully')),
-                                        );
-                                      }
-                                    } catch (e) {
-                                      if (context.mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text('Error loading mind map: $e')),
-                                        );
-                                      }
-                                    }
-                                  },
-                                );
-                              },
-                            ),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(),
-                              child: const Text('Close'),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
+                    showDialog(
+                      context: context,
+                      builder: (context) => const SavedMindMapsDialog(),
+                    );
                   }
                   break;
               }
