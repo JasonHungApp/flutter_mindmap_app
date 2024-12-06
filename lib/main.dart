@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/mind_map_provider.dart';
-import 'widgets/mind_map_node_widget.dart';
-import 'widgets/mind_map_connections.dart';
-import 'widgets/saved_mind_maps_dialog.dart';
 import 'dart:io';
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
 import 'screens/mind_map_screen.dart';
+import 'screens/intro_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -26,10 +22,8 @@ class MyApp extends StatelessWidget {
           primarySwatch: Colors.blue,
           useMaterial3: true,
         ),
-        home: const MindMapScreen(),
+        home: const IntroScreen(),
       ),
     );
   }
 }
-
-
