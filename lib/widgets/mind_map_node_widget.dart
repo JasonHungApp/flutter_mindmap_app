@@ -92,6 +92,7 @@ class _MindMapNodeWidgetState extends State<MindMapNodeWidget> {
       position: position,
       items: [
         PopupMenuItem(
+          onTap: _startEditing,
           child: Row(
             children: const [
               Icon(Icons.edit, size: 20),
@@ -99,25 +100,22 @@ class _MindMapNodeWidgetState extends State<MindMapNodeWidget> {
               Text('Edit'),
             ],
           ),
-          onTap: _startEditing,
         ),
         PopupMenuItem(
-          child: Row(
-            children: const [
+          child: const Row(
+            children: [
               Icon(Icons.link, size: 20),
               SizedBox(width: 8),
               Text('Start Connection'),
             ],
           ),
           onTap: () {
-            if (widget.onTap != null) {
-              widget.onTap();
-            }
-          },
+            widget.onTap();
+                    },
         ),
         PopupMenuItem(
-          child: Row(
-            children: const [
+          child: const Row(
+            children: [
               Icon(Icons.delete, color: Colors.red, size: 20),
               SizedBox(width: 8),
               Text('Delete', style: TextStyle(color: Colors.red)),

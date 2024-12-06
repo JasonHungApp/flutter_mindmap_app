@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'providers/mind_map_provider.dart';
 import 'widgets/mind_map_node_widget.dart';
 import 'widgets/mind_map_connections.dart';
-import 'dart:convert';
 import 'dart:io';
 
 void main() {
