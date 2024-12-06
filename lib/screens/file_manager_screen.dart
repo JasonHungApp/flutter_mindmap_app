@@ -12,6 +12,19 @@ class FileManagerScreen extends StatefulWidget {
 }
 
 class _FileManagerScreenState extends State<FileManagerScreen> {
+  late Future<List<String>> _mindMapsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMindMaps();
+  }
+
+  void _loadMindMaps() {
+    _mindMapsFuture = context.read<MindMapProvider>().getSavedMindMaps();
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -25,13 +38,17 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
                 MaterialPageRoute(
                   builder: (context) => const MindMapScreen(),
                 ),
-              );
+              ).then((_) => _loadMindMaps());
             },
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadMindMaps,
           ),
         ],
       ),
       body: FutureBuilder<List<String>>(
-        future: context.read<MindMapProvider>().getSavedMindMaps(),
+        future: _mindMapsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -62,7 +79,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
                         MaterialPageRoute(
                           builder: (context) => const MindMapScreen(),
                         ),
-                      );
+                      ).then((_) => _loadMindMaps());
                     },
                     icon: const Icon(Icons.add),
                     label: const Text('建立新的心智圖'),
@@ -116,9 +133,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
                         await context
                             .read<MindMapProvider>()
                             .deleteSavedMindMap(filePath);
-                        if (mounted) {
-                          setState(() {});
-                        }
+                        _loadMindMaps();
                       }
                     },
                   ),
@@ -131,7 +146,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
                           MaterialPageRoute(
                             builder: (context) => const MindMapScreen(),
                           ),
-                        );
+                        ).then((_) => _loadMindMaps());
                       }
                     } catch (e) {
                       if (mounted) {
