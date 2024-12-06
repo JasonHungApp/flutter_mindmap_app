@@ -1,9 +1,13 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 import '../models/mind_map_node.dart';
 
-class MindMapProvider extends ChangeNotifier {
-  final List<MindMapNode> _nodes = [];
+class MindMapProvider with ChangeNotifier {
+  List<MindMapNode> _nodes = [];
   MindMapNode? _selectedNode;
   final _uuid = const Uuid();
   String? _connectionStartNodeId;
@@ -115,6 +119,85 @@ class MindMapProvider extends ChangeNotifier {
   }
 
   void cancelConnection() {
+    _connectionStartNodeId = null;
+    notifyListeners();
+  }
+
+  Future<void> loadFromJson(String jsonContent) async {
+    try {
+      final data = jsonDecode(jsonContent) as Map<String, dynamic>;
+      _nodes = (data['nodes'] as List)
+          .map((node) => MindMapNode.fromJson(node as Map<String, dynamic>))
+          .toList();
+      _selectedNode = null;
+      _connectionStartNodeId = null;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error parsing mind map: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> loadMindMap() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+        allowMultiple: false,
+      );
+
+      if (result != null && result.files.isNotEmpty) {
+        final file = File(result.files.first.path!);
+        final content = await file.readAsString();
+        await loadFromJson(content);
+      }
+    } catch (e) {
+      debugPrint('Error loading mind map: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> saveMindMap() async {
+    try {
+      // Get the application documents directory
+      final directory = await getApplicationDocumentsDirectory();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final fileName = 'mindmap_$timestamp.json';
+      final file = File('${directory.path}/$fileName');
+
+      // Prepare the data
+      final data = {
+        'nodes': _nodes.map((node) => node.toJson()).toList(),
+      };
+
+      // Write to file
+      await file.writeAsString(jsonEncode(data));
+
+      debugPrint('Mind map saved to: ${file.path}');
+    } catch (e) {
+      debugPrint('Error saving mind map: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<String>> getSavedMindMaps() async {
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final files = directory
+          .listSync()
+          .where((file) => file.path.endsWith('.json'))
+          .map((file) => file.path)
+          .toList();
+      return files;
+    } catch (e) {
+      debugPrint('Error getting saved mind maps: $e');
+      return [];
+    }
+  }
+
+  void clearMindMap() {
+    _nodes.clear();
+    _selectedNode = null;
     _connectionStartNodeId = null;
     notifyListeners();
   }
