@@ -13,15 +13,17 @@ class MindMapProvider with ChangeNotifier {
   MindMapNode? _selectedNode;
   final _uuid = const Uuid();
   String? _connectionStartNodeId;
+  Set<String> _movingNodeIds = {}; // 追踪正在移動的節點組
 
   // 添加画布范围常量
   static const double canvasWidth = 4000;
   static const double canvasHeight = 4000;
-  static const double nodePadding = 20; // 节点与边界的最小距离
+  static const double nodePadding = 20; // 节点与边界的最小距離
 
   List<MindMapNode> get nodes => _nodes;
   MindMapNode? get selectedNode => _selectedNode;
   String? get connectionStartNodeId => _connectionStartNodeId;
+  Set<String> get movingNodeIds => _movingNodeIds; // 提供移動組的訪問器
 
   // 确保坐标在画布范围内
   (double, double) _constrainPosition(double x, double y) {
@@ -101,11 +103,50 @@ class MindMapProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  // 遞迴獲取所有子節點ID
+  List<String> _getAllChildrenIds(String nodeId) {
+    final List<String> allChildren = [];
+    final node = _nodes.firstWhere((node) => node.id == nodeId);
+    
+    allChildren.addAll(node.childrenIds);
+    for (final childId in node.childrenIds) {
+      allChildren.addAll(_getAllChildrenIds(childId));
+    }
+    
+    return allChildren;
+  }
+
+  // 移動節點及其所有子節點
+  void updateNodeAndChildrenPosition(String id, double deltaX, double deltaY) {
+    // 移動所有相關節點
+    for (final nodeId in _movingNodeIds) {
+      final node = _nodes.firstWhere((node) => node.id == nodeId);
+      final (constrainedX, constrainedY) = _constrainPosition(
+        node.x + deltaX,
+        node.y + deltaY
+      );
+      
+      final nodeIndex = _nodes.indexWhere((n) => n.id == nodeId);
+      _nodes[nodeIndex] = _nodes[nodeIndex].copyWith(
+        x: constrainedX,
+        y: constrainedY
+      );
+    }
+    
+    notifyListeners();
+  }
+
   void updateNodePosition(String id, double x, double y) {
     final nodeIndex = _nodes.indexWhere((node) => node.id == id);
     if (nodeIndex != -1) {
+      final currentNode = _nodes[nodeIndex];
       final (constrainedX, constrainedY) = _constrainPosition(x, y);
-      _nodes[nodeIndex] = _nodes[nodeIndex].copyWith(
+      
+      // 計算位移量
+      final deltaX = constrainedX - currentNode.x;
+      final deltaY = constrainedY - currentNode.y;
+      
+      _nodes[nodeIndex] = currentNode.copyWith(
         x: constrainedX,
         y: constrainedY
       );
@@ -324,6 +365,19 @@ class MindMapProvider with ChangeNotifier {
     _nodes.clear();
     _selectedNode = null;
     _connectionStartNodeId = null;
+    _movingNodeIds.clear();
+    notifyListeners();
+  }
+
+  void clearMovingNodes() {
+    _movingNodeIds.clear();
+    notifyListeners();
+  }
+
+  // 設置移動組（用於預覽）
+  void setMovingNodes(String id) {
+    final List<String> nodesToMove = [id, ..._getAllChildrenIds(id)];
+    _movingNodeIds = Set.from(nodesToMove);
     notifyListeners();
   }
 }

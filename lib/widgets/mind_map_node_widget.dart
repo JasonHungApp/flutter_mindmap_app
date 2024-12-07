@@ -30,6 +30,8 @@ class MindMapNodeWidget extends StatefulWidget {
 class _MindMapNodeWidgetState extends State<MindMapNodeWidget> {
   bool _isEditing = false;
   late TextEditingController _textController;
+  bool _isLongPressed = false; // 追踪是否處於長按狀態
+  Offset _lastOffset = Offset.zero; // 追踪最後一次長按移動的偏移量
 
   @override
   void initState() {
@@ -132,6 +134,9 @@ class _MindMapNodeWidgetState extends State<MindMapNodeWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final mindMapProvider = context.watch<MindMapProvider>();
+    final isInMovingGroup = mindMapProvider.movingNodeIds.contains(widget.node.id);
+    
     return Positioned(
       left: widget.node.x,
       top: widget.node.y,
@@ -139,17 +144,57 @@ class _MindMapNodeWidgetState extends State<MindMapNodeWidget> {
         onTap: widget.onTap,
         onDoubleTap: _startEditing,
         onSecondaryTapDown: (details) => _showContextMenu(context, details),
-        onPanEnd: (details) {
-          if (widget.onDragEnd != null) {
-            widget.onDragEnd!(Offset(widget.node.x, widget.node.y));
-          }
+        onLongPressStart: (details) {
+          setState(() {
+            _isLongPressed = true;
+          });
+          _lastOffset = details.globalPosition;
+          
+          // 先設置移動組，這樣會立即顯示視覺效果
+          context.read<MindMapProvider>().setMovingNodes(widget.node.id);
+          
+          // 顯示提示
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('將同時移動所有子節點'),
+              duration: Duration(seconds: 1),
+            ),
+          );
+        },
+        onLongPressMoveUpdate: (details) {
+          // 計算移動增量
+          final deltaX = details.globalPosition.dx - _lastOffset.dx;
+          final deltaY = details.globalPosition.dy - _lastOffset.dy;
+          
+          // 移動節點及其所有子節點
+          context.read<MindMapProvider>().updateNodeAndChildrenPosition(
+            widget.node.id,
+            deltaX,
+            deltaY,
+          );
+          
+          // 更新最後位置
+          _lastOffset = details.globalPosition;
+        },
+        onLongPressEnd: (details) {
+          setState(() {
+            _isLongPressed = false;
+          });
+          // 清除移動組
+          context.read<MindMapProvider>().clearMovingNodes();
         },
         onPanUpdate: (details) {
-          if (widget.onDragEnd != null) {
+          if (!_isLongPressed && widget.onDragEnd != null) {
+            // 一般拖動只移動當前節點
             widget.onDragEnd!(Offset(
               widget.node.x + details.delta.dx,
               widget.node.y + details.delta.dy,
             ));
+          }
+        },
+        onPanEnd: (details) {
+          if (!_isLongPressed && widget.onDragEnd != null) {
+            widget.onDragEnd!(Offset(widget.node.x, widget.node.y));
           }
         },
         child: Container(
@@ -162,12 +207,16 @@ class _MindMapNodeWidgetState extends State<MindMapNodeWidget> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(8.0),
             border: Border.all(
-              color: widget.isConnectionStart 
-                  ? Colors.green 
-                  : widget.isSelected 
-                      ? Colors.blue 
-                      : Colors.grey,
-              width: (widget.isSelected || widget.isConnectionStart) ? 2.0 : 1.0,
+              color: isInMovingGroup 
+                  ? Colors.orange.withOpacity(0.6) // 移動組中的節點使用淡橙色
+                  : widget.isConnectionStart 
+                      ? Colors.green 
+                      : widget.isSelected 
+                          ? Colors.blue 
+                          : Colors.grey,
+              width: (isInMovingGroup || widget.isSelected || widget.isConnectionStart) 
+                  ? 2.0 
+                  : 1.0,
             ),
             boxShadow: [
               BoxShadow(
