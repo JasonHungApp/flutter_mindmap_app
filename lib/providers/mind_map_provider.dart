@@ -17,14 +17,24 @@ class MindMapProvider with ChangeNotifier {
   MindMapNode? get selectedNode => _selectedNode;
   String? get connectionStartNodeId => _connectionStartNodeId;
 
-  void addNode(String text, double x, double y) {
+  void addNode(String text, double x, double y, {String? parentId}) {
+    final nodeId = _uuid.v4();
     final node = MindMapNode(
-      id: _uuid.v4(),
+      id: nodeId,
       text: text,
       x: x,
       y: y,
     );
     _nodes.add(node);
+    
+    // 如果指定了父节点，创建连接
+    if (parentId != null) {
+      addConnection(parentId, nodeId);
+    }
+    
+    // 选中新创建的节点
+    selectNode(nodeId);
+    
     notifyListeners();
   }
 

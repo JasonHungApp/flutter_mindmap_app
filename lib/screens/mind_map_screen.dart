@@ -154,57 +154,144 @@ class _MindMapScreenState extends State<MindMapScreen> {
       ),
       body: Consumer<MindMapProvider>(
         builder: (context, provider, child) {
-          return LayoutBuilder(
-            builder: (context, constraints) {
-              return InteractiveViewer(
-                boundaryMargin: const EdgeInsets.all(100),
-                minScale: 0.1,
-                maxScale: 3.0,
-                transformationController: _transformationController,
-                constrained: false,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    minWidth: 4000,
-                    minHeight: 4000,
-                    maxWidth: 4000,
-                    maxHeight: 4000,
-                  ),
-                  child: Container(
-                    color: Colors.white.withOpacity(0.1),
-                    child: Center(
-                      child: Stack(
-                        clipBehavior: Clip.none,
+          return Stack(
+            children: [
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  return InteractiveViewer(
+                    boundaryMargin: const EdgeInsets.all(100),
+                    minScale: 0.1,
+                    maxScale: 3.0,
+                    transformationController: _transformationController,
+                    constrained: false,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        minWidth: 4000,
+                        minHeight: 4000,
+                        maxWidth: 4000,
+                        maxHeight: 4000,
+                      ),
+                      child: Container(
+                        color: Colors.white.withOpacity(0.1),
+                        child: Center(
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              MindMapConnections(nodes: provider.nodes),
+                              for (final node in provider.nodes)
+                                MindMapNodeWidget(
+                                  key: ValueKey(node.id),
+                                  node: node,
+                                  isSelected: node.id == provider.selectedNode?.id,
+                                  isConnectionStart: node.id == provider.connectionStartNodeId,
+                                  onTap: () {
+                                    if (provider.connectionStartNodeId != null) {
+                                      provider.completeConnection(node.id);
+                                    } else {
+                                      provider.selectNode(node.id);
+                                    }
+                                  },
+                                  onDragEnd: (offset) {
+                                    provider.updateNodePosition(node.id, offset.dx, offset.dy);
+                                  },
+                                  onTextChanged: (text) {
+                                    provider.updateNodeText(node.id, text);
+                                  },
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              if (provider.selectedNode != null)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: MediaQuery.of(context).viewInsets.bottom + 8,
+                  child: Card(
+                    margin: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          MindMapConnections(nodes: provider.nodes),
-                          for (final node in provider.nodes)
-                            MindMapNodeWidget(
-                              key: ValueKey(node.id),
-                              node: node,
-                              isSelected: node.id == provider.selectedNode?.id,
-                              isConnectionStart: node.id == provider.connectionStartNodeId,
-                              onTap: () {
-                                if (provider.connectionStartNodeId != null) {
-                                  provider.completeConnection(node.id);
-                                } else {
-                                  provider.selectNode(node.id);
-                                }
-                              },
-                              onDragEnd: (offset) {
-                                provider.updateNodePosition(node.id, offset.dx, offset.dy);
-                              },
-                              onTextChanged: (text) {
-                                provider.updateNodeText(node.id, text);
-                              },
-                            ),
+                          _ToolbarButton(
+                            icon: Icons.add_circle_outline,
+                            label: '添加子節點',
+                            onPressed: () {
+                              final selectedNode = provider.selectedNode!;
+                              // 在选中节点的右侧添加新节点
+                              provider.addNode(
+                                '新節點',
+                                selectedNode.x + 150,
+                                selectedNode.y,
+                                parentId: selectedNode.id,
+                              );
+                            },
+                          ),
+                          _ToolbarButton(
+                            icon: Icons.account_tree_outlined,
+                            label: '添加分支',
+                            onPressed: () {
+                              final selectedNode = provider.selectedNode!;
+                              // 在选中节点的下方添加新节点
+                              provider.addNode(
+                                '新分支',
+                                selectedNode.x,
+                                selectedNode.y + 100,
+                                parentId: selectedNode.id,
+                              );
+                            },
+                          ),
+                          _ToolbarButton(
+                            icon: Icons.delete_outline,
+                            label: '刪除節點',
+                            onPressed: () {
+                              provider.deleteNode(provider.selectedNode!.id);
+                            },
+                          ),
                         ],
                       ),
                     ),
                   ),
                 ),
-              );
-            },
+            ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _ToolbarButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onPressed;
+
+  const _ToolbarButton({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon),
+            const SizedBox(height: 4),
+            Text(label, style: const TextStyle(fontSize: 12)),
+          ],
+        ),
       ),
     );
   }
