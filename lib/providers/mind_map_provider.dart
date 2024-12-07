@@ -13,26 +13,39 @@ class MindMapProvider with ChangeNotifier {
   final _uuid = const Uuid();
   String? _connectionStartNodeId;
 
+  // 添加画布范围常量
+  static const double canvasWidth = 4000;
+  static const double canvasHeight = 4000;
+  static const double nodePadding = 20; // 节点与边界的最小距离
+
   List<MindMapNode> get nodes => _nodes;
   MindMapNode? get selectedNode => _selectedNode;
   String? get connectionStartNodeId => _connectionStartNodeId;
 
+  // 确保坐标在画布范围内
+  (double, double) _constrainPosition(double x, double y) {
+    return (
+      x.clamp(nodePadding, canvasWidth - nodePadding),
+      y.clamp(nodePadding, canvasHeight - nodePadding)
+    );
+  }
+
   void addNode(String text, double x, double y, {String? parentId}) {
     final nodeId = _uuid.v4();
+    final (constrainedX, constrainedY) = _constrainPosition(x, y);
+    
     final node = MindMapNode(
       id: nodeId,
       text: text,
-      x: x,
-      y: y,
+      x: constrainedX,
+      y: constrainedY,
     );
     _nodes.add(node);
     
-    // 如果指定了父节点，创建连接
     if (parentId != null) {
       addConnection(parentId, nodeId);
     }
     
-    // 选中新创建的节点
     selectNode(nodeId);
     
     notifyListeners();
@@ -41,7 +54,11 @@ class MindMapProvider with ChangeNotifier {
   void updateNodePosition(String id, double x, double y) {
     final nodeIndex = _nodes.indexWhere((node) => node.id == id);
     if (nodeIndex != -1) {
-      _nodes[nodeIndex] = _nodes[nodeIndex].copyWith(x: x, y: y);
+      final (constrainedX, constrainedY) = _constrainPosition(x, y);
+      _nodes[nodeIndex] = _nodes[nodeIndex].copyWith(
+        x: constrainedX,
+        y: constrainedY
+      );
       notifyListeners();
     }
   }
