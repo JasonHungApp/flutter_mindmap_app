@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
@@ -30,9 +31,58 @@ class MindMapProvider with ChangeNotifier {
     );
   }
 
+  // 計算子節點的放射狀位置
+  (double, double) _calculateRadialPosition(MindMapNode parentNode) {
+    // 獲取父節點的所有子節點數量（包括即將添加的新節點）
+    final childCount = parentNode.childrenIds.length + 1;
+    
+    // 設置放射狀佈局的參數
+    const fixedAngleStep = 45.0; // 固定每個節點之間的角度差為45度
+    const baseRadius = 150.0; // 第一圈的基礎半徑
+    const startAngle = -60.0; // 開始角度（如果是 -90 度是正上方）
+    
+    // 計算當前節點在第幾圈和該圈中的位置
+    final circleIndex = (childCount - 1) ~/ 8; // 第幾圈（0為第一圈）
+    final positionInCircle = (childCount - 1) % 8; // 在當前圈的位置
+    
+    // 計算實際半徑（每圈增加100單位）
+    final radius = baseRadius + (circleIndex * 100.0);
+    
+    // 計算角度（每個位置45度）
+    final currentAngle = (startAngle + (fixedAngleStep * positionInCircle)) * (pi / 180.0);
+    
+    // 使用三角函數計算新位置
+    final offsetX = radius * cos(currentAngle);
+    final offsetY = radius * sin(currentAngle);
+    
+    // 相對於父節點的中心位置
+    final parentCenterX = parentNode.x + 50; // 假設節點寬度為100
+    final parentCenterY = parentNode.y + 20; // 假設節點高度為40
+    
+    return (
+      parentCenterX + offsetX,
+      parentCenterY + offsetY
+    );
+  }
+
   void addNode(String text, double x, double y, {String? parentId}) {
     final nodeId = _uuid.v4();
-    final (constrainedX, constrainedY) = _constrainPosition(x, y);
+    double constrainedX;
+    double constrainedY;
+
+    if (parentId != null) {
+      // 如果有父節點，使用放射狀佈局
+      final parentNode = _nodes.firstWhere((node) => node.id == parentId);
+      final (radialX, radialY) = _calculateRadialPosition(parentNode);
+      final (constX, constY) = _constrainPosition(radialX, radialY);
+      constrainedX = constX;
+      constrainedY = constY;
+    } else {
+      // 如果是根節點，使用傳入的位置
+      final (constX, constY) = _constrainPosition(x, y);
+      constrainedX = constX;
+      constrainedY = constY;
+    }
     
     final node = MindMapNode(
       id: nodeId,
