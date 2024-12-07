@@ -237,12 +237,17 @@ class _MindMapScreenState extends State<MindMapScreen> {
                             label: '添加分支',
                             onPressed: () {
                               final selectedNode = provider.selectedNode!;
+                              // 获取选中节点的父节点
+                              final parentNode = provider.nodes.firstWhere(
+                                (node) => node.childrenIds.contains(selectedNode.id),
+                                orElse: () => selectedNode, // 如果没有父节点，使用当前节点作为父节点
+                              );
                               // 在选中节点的下方添加新节点
                               provider.addNode(
                                 '新分支',
                                 selectedNode.x,
                                 selectedNode.y + 100,
-                                parentId: selectedNode.id,
+                                parentId: parentNode.id,
                               );
                             },
                           ),
