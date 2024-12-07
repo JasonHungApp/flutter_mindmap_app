@@ -4,10 +4,16 @@ import '../providers/mind_map_provider.dart';
 import '../widgets/mind_map_node_widget.dart';
 import '../widgets/mind_map_connections.dart';
 import '../widgets/saved_mind_maps_dialog.dart';
-import 'file_manager_screen.dart';
 
-class MindMapScreen extends StatelessWidget {
+class MindMapScreen extends StatefulWidget {
   const MindMapScreen({super.key});
+
+  @override
+  State<MindMapScreen> createState() => _MindMapScreenState();
+}
+
+class _MindMapScreenState extends State<MindMapScreen> {
+  final TransformationController _transformationController = TransformationController();
 
   @override
   Widget build(BuildContext context) {
@@ -109,10 +115,20 @@ class MindMapScreen extends StatelessWidget {
             icon: const Icon(Icons.add),
             onPressed: () {
               final provider = context.read<MindMapProvider>();
+              // 獲取當前視圖的變換矩陣
+              final matrix = _transformationController.value;
+              // 計算視圖中心點在畫布上的實際位置
+              final viewportCenter = MatrixUtils.transformPoint(
+                matrix, 
+                Offset(
+                  MediaQuery.of(context).size.width / 2,
+                  MediaQuery.of(context).size.height / 2,
+                ),
+              );
               provider.addNode(
                 'New Node',
-                MediaQuery.of(context).size.width / 2,
-                MediaQuery.of(context).size.height / 2,
+                viewportCenter.dx,
+                viewportCenter.dy,
               );
             },
           ),
@@ -138,30 +154,55 @@ class MindMapScreen extends StatelessWidget {
       ),
       body: Consumer<MindMapProvider>(
         builder: (context, provider, child) {
-          return Stack(
-            children: [
-              MindMapConnections(nodes: provider.nodes),
-              for (final node in provider.nodes)
-                MindMapNodeWidget(
-                  key: ValueKey(node.id),
-                  node: node,
-                  isSelected: node.id == provider.selectedNode?.id,
-                  isConnectionStart: node.id == provider.connectionStartNodeId,
-                  onTap: () {
-                    if (provider.connectionStartNodeId != null) {
-                      provider.completeConnection(node.id);
-                    } else {
-                      provider.selectNode(node.id);
-                    }
-                  },
-                  onDragEnd: (offset) {
-                    provider.updateNodePosition(node.id, offset.dx, offset.dy);
-                  },
-                  onTextChanged: (text) {
-                    provider.updateNodeText(node.id, text);
-                  },
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              return InteractiveViewer(
+                boundaryMargin: const EdgeInsets.all(100),
+                minScale: 0.1,
+                maxScale: 3.0,
+                transformationController: _transformationController,
+                constrained: false,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    minWidth: 4000,
+                    minHeight: 4000,
+                    maxWidth: 4000,
+                    maxHeight: 4000,
+                  ),
+                  child: Container(
+                    color: Colors.white.withOpacity(0.1),
+                    child: Center(
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          MindMapConnections(nodes: provider.nodes),
+                          for (final node in provider.nodes)
+                            MindMapNodeWidget(
+                              key: ValueKey(node.id),
+                              node: node,
+                              isSelected: node.id == provider.selectedNode?.id,
+                              isConnectionStart: node.id == provider.connectionStartNodeId,
+                              onTap: () {
+                                if (provider.connectionStartNodeId != null) {
+                                  provider.completeConnection(node.id);
+                                } else {
+                                  provider.selectNode(node.id);
+                                }
+                              },
+                              onDragEnd: (offset) {
+                                provider.updateNodePosition(node.id, offset.dx, offset.dy);
+                              },
+                              onTextChanged: (text) {
+                                provider.updateNodeText(node.id, text);
+                              },
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-            ],
+              );
+            },
           );
         },
       ),

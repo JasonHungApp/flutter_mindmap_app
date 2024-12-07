@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/mind_map_provider.dart';
-import 'dart:io';
-import 'screens/mind_map_screen.dart';
 import 'screens/intro_screen.dart';
 
 void main() {
