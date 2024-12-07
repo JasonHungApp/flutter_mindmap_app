@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Mindmap App</string>
+	<string>JMindmap</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -26,6 +26,25 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_dartobservatory._tcp</string>
+	</array>
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>需要存取文件夾來儲存和讀取心智圖檔案</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>用於調試模式下的設備發現</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>需要存取照片庫來儲存心智圖</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>需要存取照片庫來儲存和分享心智圖</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
